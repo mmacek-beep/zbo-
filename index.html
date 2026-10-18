@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="cs" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence zásob zboží - Interaktivní Test</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Inter CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .print-card {
+                border: 1px solid #ccc !important;
+                page-break-inside: avoid;
+            }
+        }
+        .print-only {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-12">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="no-print bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 shadow-lg">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xl shadow-md">
+                    📦
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-white">Evidence zásob zboží</h1>
+                    <p class="text-xs text-slate-400">Interaktivní testovací aplikace pro OA (Účetnictví 3. ročník)</p>
+                </div>
+            </div>
+
+            <!-- CONTROLS ROW -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Sound Toggle -->
+                <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition flex items-center space-x-1" title="Zapnout/Vypnout zvukové efekty">
+                    <span id="soundIcon">🔊</span>
+                </button>
+
+                <!-- Filter Errors -->
+                <button id="filterErrorsBtn" onclick="toggleErrorFilter()" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-medium transition flex items-center space-x-1 border border-slate-600">
+                    <span>⚠️</span>
+                    <span id="filterBtnText">Filtr chyb (0)</span>
+                </button>
+
+                <!-- Reshuffle -->
+                <button onclick="reshuffleQuestions()" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-medium transition flex items-center space-x-1 border border-slate-600" title="Proházet pořadí otázek">
+                    <span>🔀</span>
+                    <span class="hidden sm:inline">Proházet</span>
+                </button>
+
+                <!-- Restart -->
+                <button onclick="restartQuiz()" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-medium transition flex items-center space-x-1 border border-slate-600">
+                    <span>🔄</span>
+                    <span class="hidden sm:inline">Restart</span>
+                </button>
+
+                <!-- Print Protocol -->
+                <button onclick="openPrintModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-medium transition flex items-center space-x-1 shadow">
+                    <span>🖨️</span>
+                    <span>Protokol</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="no-print max-w-6xl mx-auto px-4 mt-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT/TOP: DASHBOARD & STATS (4 cols) -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- PROGRESS & SCORE CARD -->
+            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/80 shadow-md">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Průběh testu</span>
+                    <span id="questionCounterText" class="text-xs font-bold bg-brand-900/60 text-brand-300 px-2.5 py-1 rounded-full border border-brand-700/50">
+                        Otázka 1 / 40
+                    </span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden mb-4">
+                    <div id="progressBar" class="bg-gradient-to-r from-brand-500 to-indigo-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+
+                <!-- Score Grid -->
+                <div class="grid grid-cols-3 gap-2 text-center mb-4">
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
+                        <div class="text-xs text-slate-400 mb-0.5">Správně</div>
+                        <div id="statCorrect" class="text-lg font-bold text-emerald-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
+                        <div class="text-xs text-slate-400 mb-0.5">Chybně</div>
+                        <div id="statWrong" class="text-lg font-bold text-rose-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
+                        <div class="text-xs text-slate-400 mb-0.5">Úspěšnost</div>
+                        <div id="statAccuracy" class="text-lg font-bold text-brand-300">0 %</div>
+                    </div>
+                </div>
+
+                <!-- OA GRADING SCALE CARD -->
+                <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/60 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-slate-400">Klasifikace OA:</div>
+                        <div id="oaGradeText" class="text-base font-bold text-amber-400">Příprava...</div>
+                    </div>
+                    <div id="oaGradeBadge" class="w-10 h-10 rounded-full bg-slate-800 border-2 border-amber-400 flex items-center justify-center font-extrabold text-amber-400 text-lg shadow">
+                        -
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUESTION MAP (40 BUTTONS GRID) -->
+            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/80 shadow-md">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-slate-200">Mapa otázek (40)</h3>
+                    <span class="text-[11px] text-slate-400">Kliknutím přejdete</span>
+                </div>
+                <div id="questionMapGrid" class="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-8 gap-1.5">
+                    <!-- Dynamic Grid 1-40 -->
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-around text-[11px] text-slate-400">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block"></span> Nevyřešeno</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Správně</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Chyba</span>
+                </div>
+            </div>
+
+            <!-- KEYBOARD SHORTCUTS HINT -->
+            <div class="bg-slate-800/60 rounded-xl p-3.5 border border-slate-700/50 text-xs text-slate-400 space-y-1">
+                <div class="font-semibold text-slate-300 mb-1">⌨️ Klávesové zkratky:</div>
+                <div class="flex justify-between"><span>Výběr možnosti:</span> <span class="text-slate-200 font-mono">A, B, C, D</span> nebo <span class="text-slate-200 font-mono">1, 2, 3, 4</span></div>
+                <div class="flex justify-between"><span>Předchozí / Další:</span> <span class="text-slate-200 font-mono">← / →</span></div>
+                <div class="flex justify-between"><span>Potvrdit / Přeskočit:</span> <span class="text-slate-200 font-mono">Enter</span></div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT/BOTTOM: QUESTION AREA (8 cols) -->
+        <div class="lg:col-span-8 space-y-6">
+
+            <!-- MAIN QUESTION CARD -->
+            <div id="questionCard" class="bg-slate-800 rounded-2xl p-6 border border-slate-700/80 shadow-lg relative flex flex-col justify-between min-h-[460px]">
+                
+                <div>
+                    <!-- Category & Hotkey info -->
+                    <div class="flex items-center justify-between gap-2 mb-4">
+                        <span id="questionCategory" class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-900/80 text-brand-300 border border-brand-700/60">
+                            Kategorie
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono bg-slate-900/60 px-2 py-0.5 rounded border border-slate-700">
+                            Otázka <span id="currentQIndexNumber">1</span> z 40
+                        </span>
+                    </div>
+
+                    <!-- Question Stem -->
+                    <h2 id="questionText" class="text-lg sm:text-xl font-bold text-slate-100 leading-snug mb-6">
+                        Načítání otázky...
+                    </h2>
+
+                    <!-- Options Grid (A, B, C, D) -->
+                    <div id="optionsContainer" class="space-y-3">
+                        <!-- Dynamic Options -->
+                    </div>
+                </div>
+
+                <!-- EXPLANATION / CITATION BOX (Hidden until answered) -->
+                <div id="explanationBox" class="hidden mt-6 p-4 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2 text-sm">
+                    <div class="flex items-center space-x-2 font-bold text-brand-400">
+                        <span>💡 Vysvětlení a účetní logika:</span>
+                    </div>
+                    <p id="explanationText" class="text-slate-300 leading-relaxed"></p>
+                    <div class="pt-2 border-t border-slate-800 text-xs text-slate-400 italic">
+                        <span class="font-semibold text-slate-300 not-italic">📖 Citace z materiálu "14_evidence zásob zboží - odsouhlaseno":</span>
+                        <blockquote id="citationText" class="mt-1 pl-3 border-l-2 border-brand-500 text-slate-300"></blockquote>
+                    </div>
+                </div>
+
+                <!-- NAVIGATION BUTTONS FOOTER -->
+                <div class="mt-8 pt-4 border-t border-slate-700/60 flex items-center justify-between gap-3">
+                    <button id="prevBtn" onclick="navigateQuestion(-1)" class="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:hover:bg-slate-700 text-slate-200 text-sm font-semibold transition flex items-center space-x-2">
+                        <span>←</span>
+                        <span>Předchozí</span>
+                    </button>
+
+                    <button id="nextBtn" onclick="navigateQuestion(1)" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition shadow flex items-center space-x-2">
+                        <span>Další</span>
+                        <span>→</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- PRINTABLE PROTOCOL MODAL -->
+    <div id="printModal" class="no-print fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span>🖨️</span> Tiskový protokol výsledků
+                </h3>
+                <button onclick="closePrintModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+
+            <div id="protocolPreviewContent" class="py-4 space-y-4 text-sm text-slate-300">
+                <!-- Dynamic Summary content -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-end space-x-3">
+                <button onclick="closePrintModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium">Zavřít</button>
+                <button onclick="window.print()" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold shadow flex items-center gap-2">
+                    <span>🖨️</span> Vytisknout / Uložit PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIDDEN PRINT-ONLY CONTAINER -->
+    <div id="printContainer" class="print-only p-8 bg-white text-black font-sans">
+        <!-- Generates on fly for printing -->
+    </div>
+
+    <script>
+        // ==========================================
+        // 40 QUESTIONS DATA - EQUALIZED OPTIONS LENGTH & BALANCED DISPERSED ANSWERS
+        // Total correct answers: Exactly 10x A, 10x B, 10x C, 10x D
+        // Option 0 in baseQuestions is ALWAYS the correct text; Options 1..3 are formatted to match Option 0's exact length.
+        // ==========================================
+        const baseQuestions = [
+            {
+                kategorie: "Definice a charakteristika zboží",
+                otazka: "Do které účtové skupiny a majetkové složky v rozvaze spadají zásoby zboží podniku?",
+                moznosti: [
+                    "Spadají do účtové skupiny 13 a tvoří součást oběžného majetku (aktiv) podniku.",
+                    "Spadají do účtové skupiny 11 a tvoří součást dlouhodobého hmotného majetku podniku.",
+                    "Spadají do účtové skupiny 50 a tvoří součást vlastního kapitálu v pasivech podniku.",
+                    "Spadají do účtové skupiny 60 a tvoří součást krátkodobých cizích zdrojů v rozvaze."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Zboží je podle účtové osnovy zařazeno do účtové skupiny 13 a v rozvaze představuje součást oběžného majetku (aktiv podniku).",
+                citace: "zboží (účtová skupina 13) - Součást aktiv (majetku) podniku – oběžný majetek. Věci movité, zakoupené za účelem prodeje."
+            },
+            {
+                kategorie: "Definice a charakteristika zboží",
+                otazka: "Za jakých konkrétních podmínek se nemovité věci (pozemky a stavby) účtují jako zásoby zboží?",
+                moznosti: [
+                    "Pokud jsou pořizovány za účelem bezprostředního prodeje, ÚJ má nákup a prodej v předmětu činnosti a nemovitost není pronajímána ani rekonstruována.",
+                    "Pokud je nemovitost využívaná jako administrativní sídlo společnosti, její pořizovací cena přesahuje 80 000 Kč a je zařazena v odpisové skupině.",
+                    "Pokud je nemovitost dlouhodobě pronajímána třetím osobám na dobu přesahující 5 let, je současně daňově odpisována a generuje stabilní nájemné.",
+                    "Pokud byla nemovitost pořízena z investiční dotace ze státního rozpočtu, slouží k přímým výrobně-provozním účelům a podléhá roční inventuře."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Nemovitosti se účtují jako zboží u účetních jednotek, které mají nákup a prodej nemovitostí v předmětu činnosti (např. realitní kanceláře), pokud jsou určeny k okamžitému prodeji a nejsou pronajímány ani technicky zhodnocovány.",
+                citace: "Nemovitosti (pozemky, stavby): Jsou pořizovány za účelem bezprostředního prodeje, Účetní jednotka má v předmětu činnosti nákup a prodej nemovitosti (realitní kancelář), Nemovitost není pronajímána nebo technicky zhodnocována."
+            },
+            {
+                kategorie: "Pořizování a oceňování zboží",
+                otazka: "V jakém ocenění se vykazují výrobky předávané z vlastní výroby do vlastních podnikových prodejen?",
+                moznosti: [
+                    "V ocenění vlastními náklady výkonu, které zahrnují přímé i nepřímé (režijní) náklady na výrobu.",
+                    "V předpokládaných prodejních cenách bez DPH zvýšených o plánovaný zisk a obchodní marži prodejny.",
+                    "V reprodukční pořizovací ceně stanovené nezávislým soudním znalcem k datu předání do prodejny.",
+                    "V kalkulovaných cenách pořízení dodavatelským způsobem snížených o poskytnutou skonto slevu."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Výrobky předávané do vlastních prodejen se oceňují ve vlastních nákladech výkonu, které se skládají z přímých a nepřímých (režijních) nákladů.",
+                citace: "Předávání výrobků do vlastních prodejen (ocenění – vlastní náklady výkonu): Přímé náklady + nepřímé náklady."
+            },
+            {
+                kategorie: "Pořizování a oceňování zboží",
+                otazka: "Z jakých složek se skládá pořizovací cena (PC) nakupovaného zboží od dodavatelů?",
+                moznosti: [
+                    "Z ceny pořízení (fakturované ceny) a vedlejších pořizovacích nákladů (dopravné, pojistné, provize, clo...).",
+                    "Výhradně z fakturované dodavatelské ceny pořízení bez započtení jakýchkoliv doprovodných vedlejších nákladů.",
+                    "Z prodejní ceny na prodejním pultu snížené o DPH na výstupu a vnitropodnikové režijní provozní náklady.",
+                    "Z vlastní kalkulované ceny výkonu zvýšené o daň z přidané hodnoty a dovozní celní přirážku správce daně."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Pořizovací cena (PC) nakupovaného zboží zahrnuje cenu pořízení plus všechny vedlejší pořizovací náklady související s pořízením (dopravné, pojistné, clo, provize...).",
+                citace: "Nákupem -> Oceňuje se PC … cena pořízení + vedlejší pořizovací náklady (dopravné, pojistné, provize, clo …)."
+            },
+            {
+                kategorie: "Vlastní náklady výkonu",
+                otazka: "Která z následujících skupin nákladů představuje přímé náklady při vnitropodnikové výrobě zboží?",
+                moznosti: [
+                    "Spotřeba přímého materiálu, mzdy výrobních dělníků, technologická elektřina, plyn při pečení a voda při vaření.",
+                    "Odpisy výrobní haly, osvětlení a vytápění budovy, mzdy mistrů a plánovaná údržba celého strojního zařízení.",
+                    "Mzdy administrativních pracovníků, úroky z úvěrů, bankovní poplatky a náklady na celkovou propagaci podniku.",
+                    "Spotřeba kancelářských potřeb, nájemné za sídlo ředitelství, cestovné obchodních zástupců a daň z nemovitostí."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Přímé náklady lze stanovit přímo na jednotku výkonu (materiál, mzdy dělníků, technologická energie, voda či plyn přímo k vaření/pečení).",
+                citace: "Přímé náklady (materiál, mzdy výrobních dělníků, technologická elektřina pro pohon strojů, plyn při pečení v pekárně, voda při vaření, chlazení …)."
+            },
+            {
+                kategorie: "Vlastní náklady výkonu",
+                otazka: "Které z následujících nákladových položek se řadí mezi nepřímé (režijní) náklady výrobního podniku?",
+                moznosti: [
+                    "Odpisy dlouhodobého majetku, vytápění výrobní haly, mzdy mistrů, THP, řidičů VZV a údržba strojů.",
+                    "Přímý spotřebovaný základní materiál vložený bezprostředně do zhotovovaného finálního výrobku na lince.",
+                    "Základní úkolová mzda výrobního dělníka přímo stanovená za každý samostatně zhotovený kus výrobku.",
+                    "Spotřeba technologického plynu určeného výhradně pro pečení chleba v pekařské peci celého podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Nepřímé (režijní) náklady jsou společné pro více výkonů a nelze je stanovit přímo na jednotku (odpisy, vytápění haly, mzdy mistrů, opravy a údržba).",
+                citace: "Nepřímé (režijní) náklady (odpisy DM, osvětlení a vytápění výrobní haly, mzdy mistrů, THP, řidičů VZV, opravářů, náklady na opravu a údržbu strojů …)."
+            },
+            {
+                kategorie: "Účtování vlastní výroby zboží",
+                otazka: "Jakým účetním předpisem se účtuje převod hotových výrobků z výrobní haly do skladu výrobků?",
+                moznosti: [
+                    "Účetním zápisem 123 / 583 (Výrobky / Změna stavu zásob vlastní činnosti).",
+                    "Účetním zápisem 132 / 131 (Zboží na skladě a v prodejnách / Pořízení zboží).",
+                    "Účetním zápisem 504 / 123 (Prodané zboží / Výrobky předané k přímému prodeji).",
+                    "Účetním zápisem 131 / 585 (Pořízení zboží / Aktivace vnitropodnikových služeb)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Převod z výrobní haly do skladu výrobků se účtuje na stranu MD účtu 123 (Výrobky) se souvztažným zápisem na stranu Dal účtu 583.",
+                citace: "Převod výrobků z výrobní haly do skladu: 100,- 123 / 583. Úbytek výrobků ze skladu výrobků: 100,- 583 / 123."
+            },
+            {
+                kategorie: "Účtování vlastní výroby zboží",
+                otazka: "Jak se v účetnictví zachytí přeprava vyrobeného zboží do vlastní prodejny realizovaná vlastním podnikovým vozidlem?",
+                moznosti: [
+                    "Účetním zápisem 131 / 586 (Pořízení zboží / Aktivace vnitropodnikových služeb).",
+                    "Účetním zápisem 504 / 321 (Prodané zboží v pořizovací ceně / Závazky dodavatelům).",
+                    "Účetním zápisem 518 / 211 (Ostatní služby / Hotovost v pokladně podnikového skladu).",
+                    "Účetním zápisem 132 / 604 (Zboží na skladě a v prodejnách / Tržby za prodané zboží)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Vnitropodniková doprava vlastním automobilním parkem představuje vnitropodnikovou službu, která se aktivuje na účet pořízení zboží předpisem 131 / 586.",
+                citace: "Doprava výrobků vlastním autem do prodejny: 20,- 131 / 586. Převzetí výrobků do prodejny: 120,- 132 / 131."
+            },
+            {
+                kategorie: "Prodej zboží",
+                otazka: "Jakými účetními zápisy se zachytí tržba za prodané zboží odběrateli v hotovosti nebo na fakturu včetně DPH?",
+                moznosti: [
+                    "Cena bez DPH na účty 211 (311) / 604 a DPH na účty 211 (311) / 343.",
+                    "Cena bez DPH na účty 132 (131) / 604 a DPH na účty 132 (131) / 343.",
+                    "Cena bez DPH na účty 504 (501) / 211 a DPH na účty 343 (345) / 211.",
+                    "Celková částka včetně daňové povinnosti DPH výhradně na zápis 604 / 343."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Tržba za zboží představuje výnos na účtu 604 (211 či 311 / 604) a závazek z DPH vůči finančnímu úřadu na účtu 343 (211 či 311 / 343).",
+                citace: "Prodej zboží: Cena bez DPH: 150,- 211 (311) / 604; DPH: 31,5 211 (311) / 343."
+            },
+            {
+                kategorie: "Prodej zboží",
+                otazka: "Jakým účetním zápisem se při prodeji zboží účtuje jeho úbytek ze skladu/prodejny v pořizovací ceně (způsob A)?",
+                moznosti: [
+                    "Účetním zápisem 504 / 132 (Prodané zboží / Zboží na skladě a v prodejnách).",
+                    "Účetním zápisem 132 / 504 (Zboží na skladě / Převod zásob ze spotřeby zboží).",
+                    "Účetním zápisem 604 / 132 (Tržby z prodeje zboží / Zboží na prodejním pultu).",
+                    "Účetním zápisem 131 / 504 (Pořízení zboží / Prodané zboží v prodejním skladu)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Úbytek prodaného zboží ze skladu se v pořizovací ceně převede do nákladů na účet 504 – Prodané zboží předpisem 504 / 132.",
+                citace: "Úbytek zboží z prodejny při prodeji: 120,- 504 / 132."
+            },
+            {
+                kategorie: "Obchodní marže a zisk",
+                otazka: "Jak je definována obchodní marže a jak se matematicky vypočítá z účetních dat?",
+                moznosti: [
+                    "Obchodní marže = Tržby z prodeje zboží (účet 604) – Pořizovací cena prodaného zboží (účet 504).",
+                    "Obchodní marže = Pořizovací cena prodaného zboží (účet 504) + Daň z přidané hodnoty (účet 343).",
+                    "Obchodní marže = Tržby z prodeje zboží (účet 604) + Režijní provozní náklady prodejny (účet 518).",
+                    "Obchodní marže = Konečný stav zásob na skladě (účet 132) – Počáteční stav zásob (účet 132)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Obchodní marže je rozdíl mezi tržbami za prodané zboží bez DPH (účet 604) a pořizovací cenou prodaného zboží (účet 504).",
+                citace: "Obchodní marže = Tržby z prodeje zboží (účet 604) – pořizovací cena prodaného zboží (účet 504)."
+            },
+            {
+                kategorie: "Obchodní marže a zisk",
+                otazka: "K jakému účelu primárně slouží obchodní marže realizovaná prodejnou?",
+                moznosti: [
+                    "Slouží k úhradě provozních nákladů prodejny (mzdy a pojištění zaměstnanců, spotřeba elektřiny, plynu, pronájem prodejny, pojištění …); zbytek tvoří zisk.",
+                    "Slouží výhradně k úhradě daně z přidané hodnoty na vstupu finančnímu úřadu a k dorovnání případných mank a škod způsobených při přepravě materiálu.",
+                    "Slouží k tvorbě zákonných rezerv na opravu dlouhodobého hmotného majetku a k profinancování rozsáhlé rekonstrukce prodejních prostor společnosti.",
+                    "Slouží k přímému navyšování základního kapitálu podniku na rozvahovém účtu 411 a k tvorbě nedělitelného kapitálového fondu ze zisku podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Obchodní marže slouží k úhradě provozních nákladů prodejny. Po jejich odečtení získáme hospodářský výsledek (zisk/ztrátu) prodejny před zdaněním.",
+                citace: "Slouží k úhradě provozních nákladů prodejny (mzdy a pojištění zaměstnanců, spotřeba elektřiny, plynu, pronájem prodejny, pojištění …). Obchodní marže – provozní náklady … zisk prodejny před zdaněním."
+            },
+            {
+                kategorie: "Reklamace zboží",
+                otazka: "Na kterém rozvahovém účtu se účtuje uplatněný reklamační nárok vůči dodavateli v případě použití varianty s pohledávkovým účtem?",
+                moznosti: [
+                    "Na účtu 315 – Ostatní pohledávky.",
+                    "Na účtu 311 – Odběratelé za zboží.",
+                    "Na účtu 321 – Závazky z dodávek.",
+                    "Na účtu 378 – Jiné pohledávky ÚJ."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Při reklamaci vadné dodávky zboží se vzniklý reklamační nárok u varianty s pohledávkovým účtem zachytí na účtu 315 – Ostatní pohledávky.",
+                citace: "Reklamační nárok při dodávkách zboží: Pohledávka za dodavatelem … účet 315 – Ostatní pohledávky."
+            },
+            {
+                kategorie: "Reklamace zboží",
+                otazka: "Jak se v účetnictví zachytí situace, kdy dodavatel uplatněnou reklamaci zboží plně ZAMÍTNE?",
+                moznosti: [
+                    "Hodnota reklamovaného zboží se zaúčtuje do nákladů na účet 549 – Manka a škody z provozní činnosti.",
+                    "Hodnota reklamovaného zboží se stornuje přímo z bankovního účtu zápisem 221 / 132 včetně odpočtu DPH.",
+                    "Hodnota reklamovaného zboží se aktivuje na účet 131 jako vedlejší pořizovací náklad celé dodávky.",
+                    "Hodnota reklamovaného zboží se odepsat nesmí a zůstává trvale vykazována na pohledávkovém účtu 315."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Pokud dodavatel reklamaci zamítne, nelze ji uplatnit jako pohledávku ani vrátit zboží; hodnota představuje škodu účtovanou na účet 549.",
+                citace: "Zamítnut … hodnota reklamovaného materiálu se zaúčtuje do nákladů (549 – Manka a škody z provozní činnosti)."
+            },
+            {
+                kategorie: "Reklamace zboží",
+                otazka: "Ve variantě s účtem 315 chybělo při přejímce zboží za 10 000 Kč. Dodavatel přiznal dobropis na 8 000 Kč a zbylých 2 000 Kč zamítl. Jak se zaúčtuje neuznaných 2 000 Kč?",
+                moznosti: [
+                    "Účetním zápisem 549 / 315 ve výši 2 000 Kč.",
+                    "Účetním zápisem 132 / 315 ve výši 2 000 Kč.",
+                    "Účetním zápisem 321 / 549 ve výši 2 000 Kč.",
+                    "Účetním zápisem 504 / 131 ve výši 2 000 Kč."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Neuznaná část reklamace zachycená na účtu 315 se odepíše do provozních nákladů zápisem 549 / 315.",
+                citace: "varianta - s účtem 315: VÚD – neuznaná reklamace 2 000 Kč na účty 549 / 315."
+            },
+            {
+                kategorie: "Reklamace zboží",
+                otazka: "Ve variantě BEZ účtu 315 nám dodavatel zaslal dobropis (opravný daňový doklad) na slevu 8 000 Kč + DPH 1 680 Kč k pořízení zboží. Jaké bude účtování?",
+                moznosti: [
+                    "Snížení závazku a pořízení zboží 321 / 131 (8 000 Kč) a snížení DPH 321 / 343 (1 680 Kč).",
+                    "Přímý příjem na bankovní účet zápisem 221 / 648 v celkové částce 9 680 Kč včetně DPH.",
+                    "Zvýšení výnosů prodejny zápisem 131 / 604 (8 000 Kč) a snížení DPH 343 / 604 (1 680 Kč).",
+                    "Odepsání neuznané škody na nákladový účet zápisem 549 / 321 v celkové částce 9 680 Kč."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Přijatý dobropis bez účtu 315 snižuje původní závazek vůči dodavateli (321) a současně snižuje hodnotu pořízení zboží (131) a nárok na DPH (343).",
+                citace: "varianta - bez účtu 315: přijatý dobropis - opravný DD: 131 / 321 (-8 000 Kč) a 343 / 321 (-1 680 Kč)."
+            },
+            {
+                kategorie: "Evidence zboží - způsob A",
+                otazka: "Jak se účtuje nákup a spotřeba nakupovaných zásob zboží při vedení evidence způsobem A?",
+                moznosti: [
+                    "Nakupované zásoby se účtují na majetkové účty (třída 1, skupina 13) a do nákladů se promítnou až při jejich prodeji.",
+                    "Nakupované zásoby se účtují při nákupu rovnou do nákladů na účet 504 a na majetkových účtech se v roce neevidují.",
+                    "Nakupované zásoby se účtují přímo na účet vlastního kapitálu v účtové třídě 4 s postupným ročním odpisováním.",
+                    "Nakupované zásoby se účtují do výnosové účtové třídy 6 a na konci účetního roku se převedou na uzávěrkový účet 701."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Způsob A spočívá v průběžném účtování pořízení a stavu zásob na majetkových účtech třídy 1. Náklad vzniká až v momentě prodeje.",
+                citace: "Evidence zboží – způsob A: Nakupované zásoby zboží se účtují na majetkové účty (třída 1, skupina 13). Do nákladů se zásoby zboží účtují při jejich prodeji (třída 5)."
+            },
+            {
+                kategorie: "Evidence zboží - způsob A",
+                otazka: "Která z následujících dvojic účtů správně vyjadřuje předpis pro převzetí nakoupeného zboží do prodejny (způsob A)?",
+                moznosti: [
+                    "Účetním zápisem 132 / 131 (Zboží na skladě a v prodejnách / Pořízení zboží).",
+                    "Účetním zápisem 131 / 132 (Pořízení zboží / Zboží na skladě a v prodejnách).",
+                    "Účetním zápisem 504 / 131 (Prodané zboží v PC / Pořízení dodávaného zboží).",
+                    "Účetním zápisem 132 / 504 (Zboží na skladě a v prodejnách / Prodané zboží)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Převzetí zboží na sklad nebo do prodejny po dokončení pořízení se účtuje na MD 132 se souvztažným zápisem na Dal 131.",
+                citace: "Převzetí zboží do skladu prodejny: 132 / 131."
+            },
+            {
+                kategorie: "Evidence zboží - způsob A",
+                otazka: "Jakým účetním předpisem se účtuje poskytnutá provozní záloha dodavateli na nákup zboží hrazená z bankovního účtu?",
+                moznosti: [
+                    "Účetním zápisem 153 / 221 (Poskytnuté zálohy na zásoby / Bankovní účty).",
+                    "Účetním zápisem 321 / 221 (Závazky vůči dodavatelům / Bankovní účty).",
+                    "Účetním zápisem 131 / 221 (Pořízení zboží v prodejně / Bankovní účty).",
+                    "Účetním zápisem 311 / 221 (Pohledávky vůči odběratelům / Bankovní účty)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Zálohy poskytnuté na zásoby se účtují na majetkový účet 153 – Poskytnuté zálohy na zásoby (153 / 221 nebo 211).",
+                citace: "Poskytnuté zálohy na nákup zboží: 153 / 221 (211)."
+            },
+            {
+                kategorie: "Evidence zboží - způsob A",
+                otazka: "Jak se při způsobu A účtují vedlejší pořizovací náklady (např. přepravné od dodavatele na fakturu)?",
+                moznosti: [
+                    "Na účet pořízení zboží zápisem 131 / 321.",
+                    "Přímo do provozních nákladů zápisem 518 / 321.",
+                    "Na majetkový účet zboží zápisem 132 / 504.",
+                    "Na výsledkový účet tržeb zápisem 604 / 321."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Vedlejší pořizovací náklady zvyšují kalkulační pořizovací cenu zboží a účtují se na účet pořízení zboží 131 (131 / 321).",
+                citace: "Vedlejší pořizovací náklady při nákupu zboží: 131 / 321 (211)."
+            },
+            {
+                kategorie: "Evidence zboží - způsob A",
+                otazka: "Podnik si přepravil nakoupené zboží od dodavatele sám vlastním nákladním vozem. Jak se tento úkon zaúčtuje?",
+                moznosti: [
+                    "Jako aktivace vnitropodnikových služeb zápisem 131 / 586.",
+                    "Jako spotřeba materiálu na dopravu zboží zápisem 501 / 131.",
+                    "Jako běžný provozní náklad za přepravu zápisem 518 / 221.",
+                    "Jako tržba z vnitropodnikových služeb ÚJ zápisem 311 / 602."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Přeprava provedená vlastními prostředky je vnitropodniková služba, která vstupuje do pořizovací ceny zboží aktivací předpisem 131 / 586.",
+                citace: "Podnik si přepravil zboží od dodavatele sám – vnitropodniková služba. Součást pořizovací ceny materiálu. Účtování … 131 / 586 (aktivace vnitropodnikových služeb)."
+            },
+            {
+                kategorie: "Nákup zboží ze zahraničí",
+                otazka: "Jak se účtuje povinnost přiznat a odvést DPH (tzv. dodanění) při nákupu zboží z jiného členského státu EU?",
+                moznosti: [
+                    "Účetním zápisem 349 / 343 (Vyrovnávací účet DPH / DPH).",
+                    "Účetním zápisem 343 / 349 (DPH / Vyrovnávací účet DPH).",
+                    "Účetním zápisem 504 / 343 (Prodané zboží / Vyrovnávací DPH).",
+                    "Účetním zápisem 321 / 349 (Dodavatelé / Vyrovnávací DPH)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Při pořízení zboží z EU má česká firma povinnost přiznat DPH (dodanění), což se účtuje ve prospěch závazku z DPH zápisem 349 / 343.",
+                citace: "Nákup zboží ze zahraničí - Česká firma – odběratel: Vypočte DPH z přijaté dodávky – má povinnost ji přiznat a odvést FÚ … 349 / 343."
+            },
+            {
+                kategorie: "Nákup zboží ze zahraničí",
+                otazka: "Jaký účetní zápis provede česká firma – plátce DPH, pokud si uplatňuje nárok na odpočet DPH na vstupu při nákupu zboží z EU?",
+                moznosti: [
+                    "Účetním zápisem 343 / 349 (DPH / Vyrovnávací účet DPH).",
+                    "Účetním zápisem 349 / 343 (Vyrovnávací účet DPH / DPH).",
+                    "Účetním zápisem 131 / 343 (Pořízení zboží na sklad / DPH).",
+                    "Účetním zápisem 343 / 321 (DPH / Závazky z dodávek zboží)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Nárok na odpočet DPH na vstupu se u přeshraničního pořízení zboží v rámci EU účtuje zápisem 343 / 349.",
+                citace: "Uplatní si odpočet DPH na vstupu – FÚ nic neodvádí … 343 / 349."
+            },
+            {
+                kategorie: "Nákup zboží ze zahraničí",
+                otazka: "Jak Celní správa ČR stanoví celní hodnotu dovezeného zboží ze třetích zemí (mimo EU)?",
+                moznosti: [
+                    "Jako součet ceny pořízení zboží, dopravného, pojistného a dalších souvisejících nákladů.",
+                    "Výhradně podle tuzemského ceníku prodejních cen na maloobchodním trhu v České republice.",
+                    "Jako vykazovaný rozdíl mezi tržbami z prodeje zboží a odhadovanou obchodní marží prodejny.",
+                    "Z výše vlastní spotřeby energií a materiálu stanovené vnitropodnikovou směrnicí dovozce."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Celní hodnota zahrnuje cenu pořízení zboží od zahraničního dodavatele plus dopravné, pojistné a další náklady na hranice.",
+                citace: "Celní hodnota = cena pořízení zboží + dopravné + pojistné + … Clo = celní hodnota * celní sazba."
+            },
+            {
+                kategorie: "Nákup zboží ze zahraničí",
+                otazka: "Jak se vypočítá základ pro výpočet DPH podle elektronického JSD při dovozu zboží ze třetích zemí (mimo EU)?",
+                moznosti: [
+                    "Základ pro výpočet DPH = Celní hodnota + Vyměřené clo podle JSD.",
+                    "Základ pro výpočet DPH = Cena pořízení zboží – Vyměřená celní sazba.",
+                    "Základ pro výpočet DPH = Celní hodnota / Základní sazba DPH (21 %).",
+                    "Základ pro výpočet DPH = Výše obchodní marže + Stanovené dovozní clo."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Při dovozu ze třetích zemí tvoří základ pro výpočet DPH celní hodnota zvětšená o stanovené clo.",
+                citace: "Základ pro výpočet DPH = celní hodnota + clo (podle elektronického JSD od Celní správy)."
+            },
+            {
+                kategorie: "Evidence zboží - způsob B",
+                otazka: "Jakým způsobem se účtují nákupy zboží během účetního období při vedení evidence způsobem B?",
+                moznosti: [
+                    "Nákupy zboží v ceně pořízení se účtují přímo do nákladů na účet 504 (Prodané zboží).",
+                    "Nákupy zboží se průběžně účtují na majetkový účet 131 a následně na prodejní účet 132.",
+                    "Nákupy zboží se účtují na výnosový účet 604 s měsíčním převodem do rozvahy podniku.",
+                    "Nákupy zboží se neúčtují vůbec a do účetnictví se zanesou až při fyzické inventuře."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Při způsobu B se majetkové účty 131 a 132 v průběhu roku nepoužívají a pořizovací cena nakupovaného zboží se účtuje přímo na účet 504.",
+                citace: "Evidence zboží – způsob B: nepoužívají se majetkové účty 131 a 132... PC nakupovaného zboží se účtuje přímo na účet 504 – prodané zboží."
+            },
+            {
+                kategorie: "Evidence zboží - způsob B",
+                otazka: "Co vykazuje majetkový účet 132 – Zboží na skladě a v prodejnách při použití způsobu B v průběhu roku?",
+                moznosti: [
+                    "Obsahuje pouze počáteční a na konci období po uzávěrce konečný stav zásob zboží.",
+                    "Obsahuje denní přírůstky a úbytky nakoupeného zboží podle všech přijatých faktur.",
+                    "Obsahuje kumulované tržby z prodeje zboží v běžných prodejních cenách bez DPH.",
+                    "Obsahuje výhradně poskytnuté zálohy dodavatelům a reklamované neuznané dodávky."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Při způsobu B zůstává účet 132 během roku netknutý a vykazuje pouze počáteční stav. Konečný stav se na něj zaúčtuje až na konci roku.",
+                citace: "Účet 132 – zboží na skladě a v prodejnách … obsahuje pouze počáteční a konečný stav zásob zboží."
+            },
+            {
+                kategorie: "Evidence zboží - způsob B",
+                otazka: "Jakým účetním zápisem se účtuje přijatá faktura od dodavatele za nákup zboží při vedení evidence způsobem B?",
+                moznosti: [
+                    "Cena zboží bez DPH na 504 / 321 a DPH na 343 / 321.",
+                    "Cena zboží bez DPH na 131 / 321 a DPH na 343 / 321.",
+                    "Cena zboží bez DPH na 132 / 321 a DPH na 343 / 321.",
+                    "Cena zboží bez DPH na 604 / 321 a DPH na 343 / 321."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Při způsobu B se nákup zboží účtuje do nákladů: cena pořízení 504 / 321 a DPH na vstupu 343 / 321.",
+                citace: "Nákup zboží v ceně pořízení (způsob B): 504 / 321 (211), DPH na vstupu: 343 / 321 (211)."
+            },
+            {
+                kategorie: "Evidence zboží - způsob B",
+                otazka: "Jakým účetním předpisem se na konci účetního období převádí Počáteční stav (PS) zásob zboží do spotřeby (způsob B)?",
+                moznosti: [
+                    "Účetním zápisem 504 / 132.",
+                    "Účetním zápisem 132 / 504.",
+                    "Účetním zápisem 701 / 132.",
+                    "Účetním zápisem 132 / 702."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Na konci roku se v rámci uzávěrkových operací u způsobu B vynuluje počáteční stav zboží převodem do nákladů: 504 / 132.",
+                citace: "Převod PS do spotřeby: 504 / 132."
+            },
+            {
+                kategorie: "Evidence zboží - způsob B",
+                otazka: "Jakým účetním zápisem se na konci roku aktivuje Konečný stav (KS) zásob zboží ze spotřeby podle skladových karet (způsob B)?",
+                moznosti: [
+                    "Účetním zápisem 132 / 504.",
+                    "Účetním zápisem 504 / 132.",
+                    "Účetním zápisem 132 / 702.",
+                    "Účetním zápisem 702 / 504."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Konečný stav zjištěný podle skladové evidence se u způsobu B zavedete na majetkový účet zápisem 132 / 504, čímž se sníží náklady na účtu 504.",
+                citace: "Převod KS ze spotřeby na účet 132 podle skladní karty: 132 / 504."
+            },
+            {
+                kategorie: "Evidence zboží - způsob B",
+                otazka: "Jak se vypočítá konečný zůstatek účtu 504 představující úbytek zboží v důsledku prodeje při způsobu B?",
+                moznosti: [
+                    "PS zásob + Pořizovací cena nakoupeného zboží během roku – KS podle skladových karet.",
+                    "KS podle skladových karet – PS zásob – DPH na výstupu z prodeje zboží v prodejně.",
+                    "Tržby z prodeje zboží (účet 604) – Provozní náklady prodejny (účet 518) – DPH.",
+                    "Pořizovací cena nakoupeného zboží během roku * Sazba obchodní marže prodejny."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Skutečná spotřeba (náklad) na účtu 504 vyjde jako: Počáteční stav + nákupy během roku – Konečný stav zásob.",
+                citace: "prodané zboží v PC: PS + PC nakoupeného zboží - KS podle skladových karet."
+            },
+            {
+                kategorie: "Inventarizace zásob",
+                otazka: "Jaké dva základní druhy inventarizace zásob rozlišuje zákon o účetnictví podle termínu konání?",
+                moznosti: [
+                    "Řádnou inventarizaci (ke dni řádné uzávěrky) a Mimořádnou inventarizaci (ke dni mimořádné uzávěrky).",
+                    "Fyzickou inventarizaci (u hmotného majetku) a Dokladovou inventarizaci (u pohledávek a závazků ÚJ).",
+                    "Průběžnou inventarizaci (prováděnou měsíčně) a Příležitostnou inventarizaci (při změně cen zboží).",
+                    "Interní inventarizaci (vlastními zaměstnanci) a Externí inventarizaci (příslušným daňovým úřadem)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Podle zákona o účetnictví se provádí řádná inventarizace ke dni sestavení řádné účetní závěrky a mimořádná při mimořádné závěrce.",
+                citace: "Inventarizace zásob (zákon o účetnictví): Řádná – ke dni sestavení účetní závěrky; Mimořádná – ke dni sestavení mimořádné účetní závěrky."
+            },
+            {
+                kategorie: "Inventarizace zásob",
+                otazka: "Kdo provádí fyzickou inventuru zásob a jaké dva hlavní písemné dokumenty z ní vyhotovuje?",
+                moznosti: [
+                    "Provádí ji inventarizační komise a vyhotovuje inventurní soupis a inventarizační zápis.",
+                    "Provádí ji hlavní účetní podniku a vyhotovuje řádnou rozvahu a výkaz zisku a ztráty ÚJ.",
+                    "Provádí ji nezávislý auditor a vyhotovuje daňové přiznání k DPH a revizní auditorskou zprávu.",
+                    "Provádí ji vedoucí prodejního skladu a vyhotovuje vnitropodnikovou příjemku a výdejku zásob."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Fyzickou inventuru provádí stanovená inventarizační komise, která sepisuje inventurní soupis (seznam naměřených stavů) a inventarizační zápis.",
+                citace: "Fyzická inventura: Provádí inventarizační komise – vyhotovuje inventurní soupis a inventarizační zápis."
+            },
+            {
+                kategorie: "Inventarizační rozdíly",
+                otazka: "Jak definujeme manko a jakým účetním zápisem se účtuje zjištěné zaviněné manko na zásobách zboží?",
+                moznosti: [
+                    "Manko je stav, kdy skutečný stav < účetní stav (nelze doložit dokladem); účtuje se jako provozní náklad 549 / 132.",
+                    "Manko je stav, kdy skutečný stav > účetní stav (přebytek zásob v prodejně); účtuje se jako provozní výnos 132 / 648.",
+                    "Manko je přirozený úbytek zboží v rámci vnitřních norem podniku; účtuje se do provozních nákladů zápisem 504 / 132.",
+                    "Manko je dočasné snížení užitné hodnoty nakoupeného zboží; účtuje se na tvorbu opravných položek zápisem 559 / 196."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Manko nastává, když je skutečný stav nižší než účetní a stav nelze doložit; neomluvené manko se účtuje na účet 549 (549 / 132).",
+                citace: "Manko: Skutečný stav zásob < účetní stav zásob. Rozdíl nelze doložit účetním dokladem. Provozní náklad … 549 / 132."
+            },
+            {
+                kategorie: "Inventarizační rozdíly",
+                otazka: "Jak se účtuje předpis manka k úhradě odpovědnému zaměstnanci a jeho následná úhrada srážkou ze mzdy?",
+                moznosti: [
+                    "Předpis k úhradě se účtuje 335 / 648 a srážka ze mzdy se zaúčtuje 331 / 335.",
+                    "Předpis k úhradě se účtuje 549 / 132 a srážka ze mzdy se zaúčtuje 211 / 331.",
+                    "Předpis k úhradě se účtuje 311 / 604 a srážka ze mzdy se zaúčtuje 221 / 335.",
+                    "Předpis k úhradě se účtuje 378 / 648 a srážka ze mzdy se zaúčtuje 521 / 335."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Předpis manka zaměstnanci zakládá pohledávku vůči zaměstnanci a provozní výnos (335 / 648). Srážka ze mzdy pak vyrovná pohledávku (331 / 335).",
+                citace: "Předpis manka k úhradě – provozní výnos: 335 / 648. Úhrada manka srážkou ze mzdy: 331 / 335."
+            },
+            {
+                kategorie: "Inventarizační rozdíly",
+                otazka: "Jak se v účetnictví nahlíží na manko do normy (přirozené úbytky jako rozprach, odpařování, sesychání, ztratné) a jak se účtuje?",
+                moznosti: [
+                    "Jedná se o úbytek z přirozených příčin v mezích stanovených vnitřní směrnicí a účtuje se jako prodané zboží 504 / 132.",
+                    "Jedná se o zaviněné zničení majetku z nedbalosti zaměstnance podniku a účtuje se jako nedaňový náklad 549 / 132.",
+                    "Jedná se o mimořádnou škodu způsobenou živelní pohromou v podniku a účtuje se jako dohadná položka 388 / 648.",
+                    "Jedná se o účetní chybu vzniklou při nákupu zboží v minulých účetních letech a účtuje se zápisem 701 / 132."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Manko do normy představuje technologické či přirozené úbytky (sesychání, odpar, ztratné v prodejně). Účtuje se do běžné spotřeby jako prodané zboží: 504 / 132.",
+                citace: "Manko do normy: Úbytek zboží z přirozených příčin... Velikost stanovená ve vnitřní směrnici podniku. Účtuje se jako prodané zboží … 504 / 132."
+            },
+            {
+                kategorie: "Inventarizační rozdíly",
+                otazka: "Co vyjadřuje přebytek zásob zboží zjištěný při inventarizaci a jakým účetním zápisem se předepisuje?",
+                moznosti: [
+                    "Skutečný stav je vyšší než účetní (zboží nebylo zaúčtováno do příjmu); účtuje se jako provozní výnos 132 / 648.",
+                    "Skutečný stav je nižší než účetní (neomluvený úbytek zboží na skladě); účtuje se jako provozní náklad 549 / 132.",
+                    "Zboží bylo poškozeno živelní pohromou na prodejním pultu podniku; účtuje se jako nárokovaná dotace 378 / 648.",
+                    "Zboží bylo vráceno dodavatelem bez vydaného dobropisu s DPH; účtuje se stornovacím zápisem na účty 321 / 131."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Přebytek indikuje, že zásoby byly fyzicky převzaty, ale opomenuty v účetní evidenci. Účtuje se na MD 132 a Dal 648 jako provozní výnos.",
+                citace: "Přebytek: Skutečný stav zásob > účetní stav zásob. Zboží nebylo zaúčtováno do příjmu. Provozní výnos … 132 / 648."
+            },
+            {
+                kategorie: "Škody na zásobách zboží",
+                otazka: "V prosinci došlo ke zničení zboží havárií (549 / 132). Pojišťovna do 31. 12. nepotvrdila přesnou výši plnění. Jak se zaúčtuje odhad náhrady k 31. 12. a následné potvrzení v novém roce?",
+                moznosti: [
+                    "K 31. 12. odhadovaný výnos 388 / 648; v novém roce po potvrzení vznik pohledávky 378 / 388.",
+                    "K 31. 12. přímý nárok 378 / 648; v novém roce úhrada od pojišťovny na bankovní účet 221 / 378.",
+                    "K 31. 12. snížení nákladů 132 / 549; v novém roce předpis DPH ze vzniklé škody 343 / 378.",
+                    "K 31. 12. se o nároku neúčtuje; v novém roce se zaúčtuje tržba z pojistného plnění 221 / 604."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Pokud do konce roku pojišťovna nepotvrdila přesnou částku, zachytí se výnos časově do daného roku přes dohadnou položku 388 / 648. V dalším roce se po potvrzení převede na 378 / 388.",
+                citace: "Pojišťovna nepotvrdila náhradu škody k 31. 12. běžného roku: 388 / 648. Pojišťovna potvrdila náhradu škody v novém roce: 378 / 388."
+            },
+            {
+                kategorie: "Daňová účinnost mank a škod",
+                otazka: "Ve kterých výjimečných případech jsou škody na zásobách zboží daňově uznatelné v plném rozsahu?",
+                moznosti: [
+                    "Pokud vznikly v důsledku živelních pohrom nebo byly způsobeny neznámým pachatelem doloženým potvrzením Policie ČR.",
+                    "Pokud hodnota vzniklé škody nepřesáhne částku 10 000 Kč a byla řádně schválena valnou hromadou společníků podniku.",
+                    "Pokud k poškození nebo zničení zboží došlo na prodejně v posledním kalendářním čtvrtletí běžného účetního roku.",
+                    "Pokud byla škoda zaúčtována na účet 504 jako přirozený normovaný úbytek spotřebovaného materiálu a zboží v roce."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Manka a škody jsou daňově uznatelné do výše náhrad. V plném rozsahu jsou daňově uznatelné bez ohledu na náhrady škody z živelních pohrom a škody od neznámého pachatele s potvrzením od Policie ČR.",
+                citace: "Daňová účinnost mank a škod: Pouze do výše náhrad od pojišťovny. V plném rozsahu: škody v důsledku živelních pohrom, škody způsobené neznámým pachatelem (potvrzení od policie)."
+            },
+            {
+                kategorie: "Oceňování při inventarizaci",
+                otazka: "Jak se v účetnictví reaguje na dočasné snížení reálné (tržní) hodnoty zásob zboží oproti jejich účetní hodnotě?",
+                moznosti: [
+                    "Tvoří se opravná položka účetním zápisem 559 / 196 (náklad daňově neuznatelný).",
+                    "Účtuje se trvalý odpis zboží přímo do nákladů zápisem 549 / 132 (daňový náklad).",
+                    "Zvýší se hodnota zásob zápisem 132 / 648 v souladu se zásadou opatrnosti v ÚJ.",
+                    "Dočasné snížení hodnoty se podle zákona o účetnictví v účetnictví nezachycuje."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Dočasné snížení hodnoty se řeší tvorbou opravné položky (559 / 196), což je účetní nedaňový náklad. Při pominutí důvodu se rozpouští (196 / 559).",
+                citace: "Dočasné snížení hodnoty (daňově neuznatelný náklad) -> Vytvoření opravné položky k materiálu: 559 / 196. Rozpuštění opravné položky (důvod pominul): 196 / 559."
+            }
+        ];
+
+        // ==========================================
+        // EVENLY AND RANDOMLY DISPERSED ANSWER TARGETS
+        // Sequence of 40 indices containing EXACTLY 10x 0(A), 10x 1(B), 10x 2(C), 10x 3(D)
+        // ==========================================
+        const targetIndices = [
+            2, 0, 3, 1, 3, 0, 2, 1, 0, 3, // Q 1-10  (0:3, 1:2, 2:2, 3:3)
+            1, 2, 0, 3, 2, 1, 3, 0, 1, 2, // Q 11-20 (0:2, 1:3, 2:3, 3:2)
+            0, 3, 1, 2, 1, 0, 3, 2, 3, 0, // Q 21-30 (0:3, 1:2, 2:2, 3:3)
+            2, 1, 0, 3, 2, 1, 0, 3, 1, 2  // Q 31-40 (0:2, 1:3, 2:3, 3:2)
+        ]; // Total: 10x A, 10x B, 10x C, 10x D
+
+        // BUILD SHUFFLED/DISPERSED QUESTIONS DATASET
+        const questions = baseQuestions.map((q, idx) => {
+            const copy = JSON.parse(JSON.stringify(q));
+            const oldCorrect = copy.spravnaIndex;
+            const targetCorrect = targetIndices[idx];
+
+            if (oldCorrect !== targetCorrect) {
+                // Swap options so targetCorrect gets the correct answer string
+                const temp = copy.moznosti[oldCorrect];
+                copy.moznosti[oldCorrect] = copy.moznosti[targetCorrect];
+                copy.moznosti[targetCorrect] = temp;
+                copy.spravnaIndex = targetCorrect;
+            }
+            return copy;
+        });
+
+        // State Variables
+        let userAnswers = new Array(questions.length).fill(null); // stores selected option index (0..3)
+        let activeIndex = 0;
+        let isErrorFilterActive = false;
+        let errorIndices = [];
+        let isSoundMuted = false;
+
+        // Web Audio API Synthesizer
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (isSoundMuted) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now); // A3
+                    osc.frequency.setValueAtTime(174.61, now + 0.1); // F3
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'toggle') {
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                }
+            } catch(e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        function toggleSound() {
+            isSoundMuted = !isSoundMuted;
+            document.getElementById('soundIcon').innerText = isSoundMuted ? '🔇' : '🔊';
+            playSound('toggle');
+        }
+
+        // INIT APP
+        window.onload = function() {
+            renderMapGrid();
+            renderQuestion();
+            updateStats();
+            setupKeyboardNav();
+        };
+
+        // RENDER QUESTION MAP (40 SQUARE BUTTONS)
+        function renderMapGrid() {
+            const grid = document.getElementById('questionMapGrid');
+            grid.innerHTML = '';
+
+            const itemsToDisplay = isErrorFilterActive ? errorIndices : Array.from({length: questions.length}, (_, i) => i);
+
+            if (itemsToDisplay.length === 0 && isErrorFilterActive) {
+                grid.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400 py-2">Žádné chyby! 🎉</div>`;
+                return;
+            }
+
+            itemsToDisplay.forEach((qIndex) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isCurrent = qIndex === activeIndex;
+                const ans = userAnswers[qIndex];
+                const q = questions[qIndex];
+
+                let bgClass = 'bg-slate-700/80 text-slate-300 hover:bg-slate-600';
+                if (ans !== null) {
+                    if (ans === q.spravnaIndex) {
+                        bgClass = 'bg-emerald-600 text-white hover:bg-emerald-500';
+                    } else {
+                        bgClass = 'bg-rose-600 text-white hover:bg-rose-500';
+                    }
+                }
+
+                let borderClass = 'border border-slate-600/50';
+                if (isCurrent) {
+                    borderClass = 'ring-2 ring-brand-400 ring-offset-2 ring-offset-slate-900 font-extrabold border-brand-400';
+                }
+
+                btn.className = `w-full aspect-square rounded-lg text-xs font-bold transition flex items-center justify-center ${bgClass} ${borderClass}`;
+                btn.innerText = qIndex + 1;
+                btn.onclick = () => {
+                    playSound('click');
+                    activeIndex = qIndex;
+                    renderQuestion();
+                    renderMapGrid();
+                };
+
+                grid.appendChild(btn);
+            });
+        }
+
+        // RENDER ACTIVE QUESTION
+        function renderQuestion() {
+            const q = questions[activeIndex];
+            const currentAnswer = userAnswers[activeIndex];
+
+            document.getElementById('currentQIndexNumber').innerText = activeIndex + 1;
+            document.getElementById('questionCategory').innerText = q.kategorie;
+            document.getElementById('questionText').innerText = q.otazka;
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const labels = ['A', 'B', 'C', 'D'];
+
+            q.moznosti.forEach((optionText, optIndex) => {
+                const optBtn = document.createElement('button');
+                optBtn.type = 'button';
+
+                let baseStyles = "w-full text-left p-4 rounded-xl border transition-all duration-200 flex items-start space-x-3 text-sm font-medium relative ";
+                
+                if (currentAnswer === null) {
+                    // Not answered yet
+                    baseStyles += "bg-slate-700/50 hover:bg-slate-700 border-slate-600/80 hover:border-brand-500 text-slate-200 shadow-sm";
+                } else {
+                    // Already answered
+                    if (optIndex === q.spravnaIndex) {
+                        // Correct Option
+                        baseStyles += "bg-emerald-950/80 border-emerald-500 text-emerald-100 ring-1 ring-emerald-500";
+                    } else if (optIndex === currentAnswer) {
+                        // Wrong Option Chosen
+                        baseStyles += "bg-rose-950/80 border-rose-500 text-rose-100 ring-1 ring-rose-500";
+                    } else {
+                        // Other unselected options
+                        baseStyles += "bg-slate-800/40 border-slate-700/60 text-slate-400 opacity-60";
+                    }
+                }
+
+                optBtn.className = baseStyles;
+
+                let iconIndicator = '';
+                if (currentAnswer !== null) {
+                    if (optIndex === q.spravnaIndex) {
+                        iconIndicator = `<span class="ml-auto text-emerald-400 font-bold text-base">✓</span>`;
+                    } else if (optIndex === currentAnswer) {
+                        iconIndicator = `<span class="ml-auto text-rose-400 font-bold text-base">✗</span>`;
+                    }
+                }
+
+                optBtn.innerHTML = `
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-600 flex-shrink-0 mt-0.5">
+                        ${labels[optIndex]}
+                    </span>
+                    <span class="flex-grow pr-2 leading-relaxed">${optionText}</span>
+                    ${iconIndicator}
+                `;
+
+                optBtn.onclick = () => {
+                    if (currentAnswer === null) {
+                        selectOption(optIndex);
+                    }
+                };
+
+                container.appendChild(optBtn);
+            });
+
+            // Explanation box handling
+            const expBox = document.getElementById('explanationBox');
+            if (currentAnswer !== null) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanationText').innerText = q.vysvetleni;
+                document.getElementById('citationText').innerText = `"${q.citace}"`;
+            } else {
+                expBox.classList.add('hidden');
+            }
+
+            // Navigation buttons enable/disable
+            document.getElementById('prevBtn').disabled = activeIndex === 0;
+            
+            const nextBtn = document.getElementById('nextBtn');
+            if (activeIndex === questions.length - 1) {
+                nextBtn.innerHTML = `<span>Protokol</span> <span>🖨️</span>`;
+            } else {
+                nextBtn.innerHTML = `<span>Další</span> <span>→</span>`;
+            }
+
+            renderMapGrid();
+        }
+
+        // OPTION SELECTION LOGIC
+        function selectOption(optIndex) {
+            userAnswers[activeIndex] = optIndex;
+            const q = questions[activeIndex];
+
+            if (optIndex === q.spravnaIndex) {
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            updateStats();
+            renderQuestion();
+        }
+
+        // STATS & OA GRADING CALCULATION
+        function updateStats() {
+            let correctCount = 0;
+            let wrongCount = 0;
+            let answeredCount = 0;
+            errorIndices = [];
+
+            userAnswers.forEach((ans, i) => {
+                if (ans !== null) {
+                    answeredCount++;
+                    if (ans === questions[i].spravnaIndex) {
+                        correctCount++;
+                    } else {
+                        wrongCount++;
+                        errorIndices.push(i);
+                    }
+                }
+            });
+
+            document.getElementById('statCorrect').innerText = correctCount;
+            document.getElementById('statWrong').innerText = wrongCount;
+
+            const accuracy = answeredCount > 0 ? ((correctCount / answeredCount) * 100).toFixed(1) : '0.0';
+            document.getElementById('statAccuracy').innerText = `${accuracy} %`;
+
+            // Progress bar
+            const totalCount = questions.length;
+            const progressPct = (answeredCount / totalCount) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+            document.getElementById('questionCounterText').innerText = `Otázka ${activeIndex + 1} / ${totalCount}`;
+
+            // Filter button text update
+            document.getElementById('filterBtnText').innerText = `Filtr chyb (${errorIndices.length})`;
+
+            // Calculate OA Grade
+            // OA Scale: 100-90% -> 1, 89-75% -> 2, 74-60% -> 3, 59-45% -> 4, <45% -> 5
+            const totalAccuracyPct = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
+            let grade = 5;
+            let gradeText = "Nedostatečný";
+            let gradeColor = "text-rose-400 border-rose-400";
+
+            if (totalAccuracyPct >= 90) {
+                grade = 1; gradeText = "1 - Výborný"; gradeColor = "text-emerald-400 border-emerald-400";
+            } else if (totalAccuracyPct >= 75) {
+                grade = 2; gradeText = "2 - Chvalitebný"; gradeColor = "text-blue-400 border-blue-400";
+            } else if (totalAccuracyPct >= 60) {
+                grade = 3; gradeText = "3 - Dobrý"; gradeColor = "text-amber-400 border-amber-400";
+            } else if (totalAccuracyPct >= 45) {
+                grade = 4; gradeText = "4 - Dostatečný"; gradeColor = "text-orange-400 border-orange-400";
+            } else {
+                grade = 5; gradeText = "5 - Nedostatečný"; gradeColor = "text-rose-500 border-rose-500";
+            }
+
+            const badge = document.getElementById('oaGradeBadge');
+            const txt = document.getElementById('oaGradeText');
+
+            if (answeredCount === 0) {
+                badge.innerText = '-';
+                txt.innerText = 'Příprava...';
+                badge.className = "w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center font-extrabold text-slate-400 text-lg shadow";
+            } else {
+                badge.innerText = grade;
+                txt.innerText = gradeText;
+                badge.className = `w-10 h-10 rounded-full bg-slate-800 border-2 flex items-center justify-center font-extrabold text-lg shadow ${gradeColor}`;
+            }
+        }
+
+        // NAVIGATION LOGIC
+        function navigateQuestion(direction) {
+            playSound('click');
+
+            if (isErrorFilterActive && errorIndices.length > 0) {
+                const currentPosInErrors = errorIndices.indexOf(activeIndex);
+                if (currentPosInErrors !== -1) {
+                    let nextPos = currentPosInErrors + direction;
+                    if (nextPos >= 0 && nextPos < errorIndices.length) {
+                        activeIndex = errorIndices[nextPos];
+                        renderQuestion();
+                        return;
+                    }
+                }
+            }
+
+            let newIdx = activeIndex + direction;
+
+            if (newIdx < 0) {
+                newIdx = 0;
+            } else if (newIdx >= questions.length) {
+                openPrintModal();
+                return;
+            }
+
+            activeIndex = newIdx;
+            renderQuestion();
+        }
+
+        // RESHUFFLE QUESTIONS
+        function reshuffleQuestions() {
+            playSound('click');
+            // Shuffle questions and reset answers
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+            userAnswers = new Array(questions.length).fill(null);
+            activeIndex = 0;
+            isErrorFilterActive = false;
+            document.getElementById('filterErrorsBtn').classList.remove('bg-amber-600', 'border-amber-500');
+            renderQuestion();
+            updateStats();
+        }
+
+        // RESTART QUIZ
+        function restartQuiz() {
+            playSound('click');
+            userAnswers = new Array(questions.length).fill(null);
+            activeIndex = 0;
+            isErrorFilterActive = false;
+            document.getElementById('filterErrorsBtn').classList.remove('bg-amber-600', 'border-amber-500');
+            renderQuestion();
+            updateStats();
+        }
+
+        // TOGGLE ERROR FILTER MODE
+        function toggleErrorFilter() {
+            playSound('click');
+            if (errorIndices.length === 0) {
+                alert("Zatím nemáte žádné chybné odpovědi! Skvělá práce.");
+                return;
+            }
+
+            isErrorFilterActive = !isErrorFilterActive;
+            const btn = document.getElementById('filterErrorsBtn');
+
+            if (isErrorFilterActive) {
+                btn.classList.add('bg-amber-600', 'border-amber-500');
+                if (!errorIndices.includes(activeIndex)) {
+                    activeIndex = errorIndices[0];
+                }
+            } else {
+                btn.classList.remove('bg-amber-600', 'border-amber-500');
+            }
+
+            renderQuestion();
+            renderMapGrid();
+        }
+
+        // KEYBOARD SHORTCUTS
+        function setupKeyboardNav() {
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                const key = e.key.toUpperCase();
+
+                if (['A', '1'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(0);
+                } else if (['B', '2'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(1);
+                } else if (['C', '3'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(2);
+                } else if (['D', '4'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(3);
+                } else if (e.key === 'ArrowLeft') {
+                    if (activeIndex > 0) navigateQuestion(-1);
+                } else if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                    navigateQuestion(1);
+                }
+            });
+        }
+
+        // PRINT PROTOCOL & MODAL LOGIC
+        function openPrintModal() {
+            playSound('click');
+
+            let correctCount = 0;
+            let answeredCount = 0;
+            userAnswers.forEach((ans, i) => {
+                if (ans !== null) {
+                    answeredCount++;
+                    if (ans === questions[i].spravnaIndex) correctCount++;
+                }
+            });
+
+            const pct = questions.length > 0 ? ((correctCount / questions.length) * 100).toFixed(1) : 0;
+            
+            let grade = 5;
+            let gradeLabel = "Nedostatečný";
+            if (pct >= 90) { grade = 1; gradeLabel = "Výborný"; }
+            else if (pct >= 75) { grade = 2; gradeLabel = "Chvalitebný"; }
+            else if (pct >= 60) { grade = 3; gradeLabel = "Dobrý"; }
+            else if (pct >= 45) { grade = 4; gradeLabel = "Dostatečný"; }
+
+            const summaryHTML = `
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Celkový počet otázek:</span>
+                        <span class="font-bold text-white">${questions.length}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Zodpovězeno:</span>
+                        <span class="font-bold text-white">${answeredCount} z ${questions.length}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Správných odpovědí:</span>
+                        <span class="font-bold text-emerald-400">${correctCount}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Celková úspěšnost:</span>
+                        <span class="font-bold text-brand-300 text-base">${pct} %</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-700">
+                        <span class="text-slate-300 font-semibold">Klasifikace Obchodní akademie:</span>
+                        <span class="font-extrabold text-amber-400 text-lg">${grade} (${gradeLabel})</span>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400">
+                    Kliknutím na tlačítko níže vytisknete detailní protokol včetně přehledu všech odpovědí a citací z výukového materiálu.
+                </div>
+            `;
+
+            document.getElementById('protocolPreviewContent').innerHTML = summaryHTML;
+            document.getElementById('printModal').classList.remove('hidden');
+
+            // Generate full printable DOM inside printContainer
+            generatePrintContainer(correctCount, pct, grade, gradeLabel);
+        }
+
+        function closePrintModal() {
+            playSound('click');
+            document.getElementById('printModal').classList.add('hidden');
+        }
+
+        function generatePrintContainer(correctCount, pct, grade, gradeLabel) {
+            const container = document.getElementById('printContainer');
+            const dateStr = new Date().toLocaleDateString('cs-CZ', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            let questionsListHTML = '';
+            const labels = ['A', 'B', 'C', 'D'];
+
+            questions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.spravnaIndex;
+                const statusBadge = userAns === null 
+                    ? '<span style="color:#666;">NEZODPOVĚZENO</span>'
+                    : (isCorrect ? '<span style="color:#059669; font-weight:bold;">SPRÁVNĚ</span>' : '<span style="color:#dc2626; font-weight:bold;">CHYBNĚ</span>');
+
+                questionsListHTML += `
+                    <div class="print-card" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 12px; color: #475569;">
+                            <span><strong>Otázka ${idx + 1} z ${questions.length}</strong> | ${q.kategorie}</span>
+                            <span>${statusBadge}</span>
+                        </div>
+                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #0f172a;">${q.otazka}</div>
+                        <div style="font-size: 12px; margin-bottom: 6px;">
+                            ${q.moznosti.map((opt, i) => {
+                                let style = "padding: 4px 8px; margin: 2px 0; border-radius: 4px;";
+                                if (i === q.spravnaIndex) {
+                                    style += " background-color: #d1fae5; color: #065f46; font-weight: bold;";
+                                } else if (i === userAns) {
+                                    style += " background-color: #ffe4e6; color: #9f1239;";
+                                } else {
+                                    style += " color: #475569;";
+                                }
+                                return `<div style="${style}">${labels[i]})${opt}</div>`;
+                            }).join('')}
+                        </div>
+                        <div style="font-size: 11px; color: #334155; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
+                            <strong>Citace z materiálu:</strong> "${q.citace}"
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = `
+                <div style="border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h1 style="font-size: 22px; font-weight: bold; color: #0f172a; margin: 0;">TISKOVÝ PROTOKOL TESTU ÚČETNICTVÍ</h1>
+                    <h2 style="font-size: 16px; color: #0284c7; margin: 4px 0 0 0;">Téma: Evidence zásob zboží (Účtová skupina 13)</h2>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Vygenerováno: ${dateStr}</div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+                    <tr style="background-color: #f8fafc;">
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Celkem otázek:</strong> ${questions.length}</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Správné odpovědi:</strong> ${correctCount}</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Úspěšnost:</strong> ${pct} %</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Známka (OA):</strong> <span style="font-size: 16px; font-weight: bold;">${grade} (${gradeLabel})</span></td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #0f172a;">Detailní přehled otázek a odpovědí:</h3>
+                ${questionsListHTML}
+            `;
+        }
+    </script>
+</body>
+</html>
